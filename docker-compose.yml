@@ -10,7 +10,7 @@ services:
       - "./docker/database:/var/lib/mysql"
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=admin
-      - MYSQL_PASSWORD=${DB_PASSWORD}
-      - MYSQL_USER=${DB_USER}
-      - MYSQL_DATABASE=${DB_DATABASE}
+      - MARIADB_ROOT_PASSWORD=admin
+      - MARIADB_PASSWORD=${DB_PASSWORD}
+      - MARIADB_USER=${DB_USER}
+      - MARIADB_DATABASE=logisticdb
