@@ -88,4 +88,23 @@ public class UserService {
             throw new ApiExceptionResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+
+    public Boolean existsByUsername(String username) {
+        try {
+            Optional<User> optionalUser = userRepository.findByUsername(username);
+            return optionalUser.isPresent();
+        } catch (Exception e) {
+            throw new ApiExceptionResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public Boolean existsById(Long id) {
+        try {
+            Optional<User> optionalUser = userRepository.findById(id);
+            return optionalUser.isPresent();
+        } catch (Exception e) {
+            throw new ApiExceptionResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
 }

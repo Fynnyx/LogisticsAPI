@@ -2,6 +2,8 @@ package ch.fwesterath.logisticsapi.auth.security;
 
 import ch.fwesterath.logisticsapi.auth.jwt.JwtAuthenticationFilter;
 import ch.fwesterath.logisticsapi.auth.user.JwtUserAuthenticationProvider;
+import ch.fwesterath.logisticsapi.models.user.User;
+import ch.fwesterath.logisticsapi.models.user.UserService;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -25,7 +28,7 @@ import java.io.IOException;
 public class SecSecurityConfig {
 
     @Autowired
-    private JwtUserAuthenticationProvider jwtAuthenticationProvider;
+    UserService userService;
 
     Logger logger = LoggerFactory.getLogger(SecSecurityConfig.class);
 
@@ -38,7 +41,7 @@ public class SecSecurityConfig {
                 .formLogin(
                         AbstractHttpConfigurer::disable
                 )
-                .addFilter(new JwtAuthenticationFilter)
+                .addFilter(new JwtAuthenticationFilter(authenticationManager(), userService))
                 .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
                         .requestMatchers("/auth/**").permitAll()
 
@@ -47,11 +50,15 @@ public class SecSecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/webjars/**").permitAll()
-                )
-                .authenticationProvider(jwtAuthenticationProvider);
+                );
 
         return http.build();
     }
 
-
+    private AuthenticationManager authenticationManager() {
+        return authentication -> {
+            logger.info("Authenticating user: " + authentication.getName());
+            return authentication;
+        };
+    }
 }

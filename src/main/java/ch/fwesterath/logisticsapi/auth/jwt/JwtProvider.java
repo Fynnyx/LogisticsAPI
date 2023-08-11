@@ -20,7 +20,7 @@ import java.security.Key;
 public class JwtProvider {
 
     @Value("${jwt.secret}")
-    private String jwtSecret;
+    private String jwtSecret = "a758c1be-db6b-473e-953b-b3db87715805a758c1be-db6b-473e-953b-b3db87715805";
 
     @Value("${jwt.expiration}")
     private long jwtExpiration;
