@@ -13,14 +13,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.logging.Logger;
+
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
+
+    Logger logger = Logger.getLogger(AuthenticationController.class.getName());
     @PostMapping("/user/signup")
     public ResponseEntity<JwtAuthenticationResponse> signup(@RequestBody SignUpRequest request) {
         try {
+            logger.info("Signup request: " + request.toString());
             return ResponseEntity.ok(authenticationService.signup(request));
         } catch (Exception e) {
             throw new ApiExceptionResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
@@ -30,6 +35,7 @@ public class AuthenticationController {
     @PostMapping("/user/signin")
     public ResponseEntity<JwtAuthenticationResponse> signin(@RequestBody SigninRequest request) {
         try {
+            logger.info("Signin request: " + request.toString());
             return ResponseEntity.ok(authenticationService.signin(request));
         } catch (Exception e) {
             throw new ApiExceptionResponse(HttpStatus.UNAUTHORIZED, e.getMessage());

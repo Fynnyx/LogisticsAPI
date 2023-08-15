@@ -46,10 +46,6 @@ public class User implements UserDetails {
     @JsonIgnore
     private String passwordHash;
 
-    @Transient
-    @JsonIgnore
-    private String password;
-
     @ManyToMany(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_project",
@@ -85,6 +81,11 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("role." + role.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.passwordHash;
     }
 
     @Override
