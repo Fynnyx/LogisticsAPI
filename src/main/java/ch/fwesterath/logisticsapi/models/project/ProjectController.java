@@ -1,10 +1,16 @@
 package ch.fwesterath.logisticsapi.models.project;
 
+import ch.fwesterath.logisticsapi.error.ApiExceptionResponse;
 import ch.fwesterath.logisticsapi.models.department.Department;
 import ch.fwesterath.logisticsapi.models.department.DepartmentService;
 import ch.fwesterath.logisticsapi.models.transport.Transport;
 import ch.fwesterath.logisticsapi.models.transport.TransportService;
+import ch.fwesterath.logisticsapi.models.user.User;
+import ch.fwesterath.logisticsapi.models.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,6 +19,9 @@ public class ProjectController {
 
     @Autowired
     private ProjectService projectService;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private TransportService transportService;
@@ -28,7 +37,16 @@ public class ProjectController {
 
     @GetMapping("/{id}")
     public Project getProjectById(@PathVariable("id") Long id) {
-        return projectService.getProjectById(id);
+
+        Project project = projectService.getProjectById(id);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = userService.getUserByUsername(authentication.getName());
+        ProjectAccessControlHelper projectAccessControlHelper = new ProjectAccessControlHelper();
+        if (projectAccessControlHelper.canUserAccessProject(project, user)) {
+            return project;
+        } else {
+            throw new ApiExceptionResponse(HttpStatus.UNAUTHORIZED, "User is not authorized to access this project");
+        }
     }
 
     @PostMapping

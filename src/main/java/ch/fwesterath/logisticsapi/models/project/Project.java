@@ -2,6 +2,7 @@ package ch.fwesterath.logisticsapi.models.project;
 
 import ch.fwesterath.logisticsapi.models.department.Department;
 import ch.fwesterath.logisticsapi.models.transport.Transport;
+import ch.fwesterath.logisticsapi.models.user.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -35,6 +36,15 @@ public class Project {
 
     @Column(name = "description")
     private String description;
+
+    @ManyToMany(mappedBy = "projects", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    @JsonIgnoreProperties(value = "projects", allowSetters = true)
+    private Set<User> users = Set.of();
+
+    @ManyToOne(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    @JoinColumn(name = "owner_id", nullable = false)
+    @JsonIgnoreProperties(value = {"ownedProjects", "projects"}, allowSetters = true)
+    private User owner;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
     @JsonIgnoreProperties(value = "project", allowSetters = true)

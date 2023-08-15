@@ -14,20 +14,24 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 @Service
 public class JwtServiceImpl implements JwtService {
     @Value("${jwt.signing-key}")
     private String jwtSigningKey;
+
+    Logger logger = Logger.getLogger(JwtServiceImpl.class.getName());
     @Override
     public String extractUserName(String token) {
-        System.out.println(jwtSigningKey);
         return extractClaim(token, Claims::getSubject);
     }
 
     @Override
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        String token = generateToken(new HashMap<>(), userDetails);
+        logger.info("Generated token for user: " + userDetails.getUsername());
+        return token;
     }
 
     @Override
@@ -46,7 +50,8 @@ public class JwtServiceImpl implements JwtService {
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
+                .setIssuer("logistics-api")
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
     }
 
@@ -64,8 +69,6 @@ public class JwtServiceImpl implements JwtService {
     }
 
     private Key getSigningKey() {
-//        byte[] keyBytes = Decoders.BASE64.decode(jwtSigningKey);
-//        return Keys.hmacShaKeyFor(keyBytes);
         return Keys.hmacShaKeyFor(jwtSigningKey.getBytes());
     }
 }

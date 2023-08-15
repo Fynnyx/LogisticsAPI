@@ -1,10 +1,16 @@
 package ch.fwesterath.logisticsapi.auth.config;
 
 import ch.fwesterath.logisticsapi.auth.jwt.JwtAuthenticationFilter;
+import ch.fwesterath.logisticsapi.helper.Role;
 import ch.fwesterath.logisticsapi.models.user.UserAuthService;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -12,10 +18,19 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
@@ -27,22 +42,76 @@ public class SecurityConfiguration {
     private final UserAuthService userService;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("Debug: Role name: " + Role.ADMIN.name());
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(
-                                "/auth/**",
+                                "/auth/user/**",
                                 "/docs/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/webjars/**"
-                        )
-
-                        .permitAll().anyRequest().authenticated())
+                        ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/projects"
+                        ).hasAnyAuthority("role.USER", "role.ADMIN")
+                        .requestMatchers(
+                                "/project/*",
+                                "/projects/*/transports",
+                                "/projects/*/departments"
+                        ).hasAuthority("role.USER")
+                        .requestMatchers(
+                                "/projects",
+                                "/projects/**",
+                                "/users"
+                        ).hasAuthority("role.ADMIN")
+                        .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new PreAuthFilter(), JwtAuthenticationFilter.class);
+        http.addFilterAfter(new PrintRolesFilter(), JwtAuthenticationFilter.class);
+        http.exceptionHandling(
+                exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(
+                                (request, response, authException) -> {
+                                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "The could not be authenticated or authorized");
+                                }
+                        )
+                        .accessDeniedHandler(
+                                (request, response, accessDeniedException) -> {
+                                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "This user/token is not authorized to access this resource");
+                                }
+                        )
+        );
         return http.build();
+    }
+
+    public class PrintRolesFilter extends OncePerRequestFilter {
+        @Override
+        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+                List<String> roles = authorities.stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .toList();
+
+                logger.info("Authenticated User Roles: " + roles);
+            }
+
+            filterChain.doFilter(request, response);
+        }
+    }
+
+    public class PreAuthFilter extends OncePerRequestFilter {
+        @Override
+        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+            logger.info("Request: " + request.getMethod() + " " + request.getRequestURI() + " from " + request.getRemoteAddr());
+            filterChain.doFilter(request, response);
+        }
     }
 
     @Bean

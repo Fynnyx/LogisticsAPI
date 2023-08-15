@@ -26,7 +26,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.setFirstname(request.getFirstname());
         user.setLastname(request.getLastname());
         user.setUsername(request.getUsername());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setPasswordHash(request.getPassword());
         user.setRole(Role.USER);
         userRepository.save(user);
         var jwt = jwtService.generateToken(user);
@@ -38,7 +38,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         var user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+        if (!user.verifyPassword(request.getPassword())) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
         var jwt = jwtService.generateToken(user);
         return JwtAuthenticationResponse.builder().token(jwt).build();
     }
