@@ -39,28 +39,27 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", length = 20, nullable = false)
-    private Role role;
+    private Role role = Role.USER;
 
     @Column(name = "password", length = 100, nullable = false)
     @Setter(AccessLevel.NONE)
     @JsonIgnore
     private String passwordHash;
 
-    @ManyToMany(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_project",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "project_id")
     )
-    @JsonIgnoreProperties(value = {"owner, users"}, allowSetters = true)
-    private List<Project> projects;
+    @JsonIgnoreProperties(value = {"owner", "users"}, allowSetters = true)
+    private List<Project> projects = List.of();
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "owner", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, fetch = FetchType.EAGER)
     @JsonIgnoreProperties(value = "owner", allowSetters = true)
-    private List<Project> ownedProjects;
+    private List<Project> ownedProjects = List.of();
 
     public void setPasswordHash(String password) {
-        // Hash the password using a secure hashing algorithm (e.g., BCrypt)
         this.passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
@@ -84,6 +83,7 @@ public class User implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public String getPassword() {
         return this.passwordHash;
     }

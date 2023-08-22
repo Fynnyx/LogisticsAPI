@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 
@@ -38,8 +39,21 @@ public class ProjectService {
         }
     }
 
+    public Project getProjectByKeyname(String keyName) {
+        try {
+            if (projectRepository.findByKeyName(keyName).isPresent()) {
+                return projectRepository.findByKeyName(keyName).get();
+            } else {
+                throw new ApiExceptionResponse(HttpStatus.NOT_FOUND, "Project not found with keyName " + keyName);
+            }
+        } catch (Exception e) {
+            throw new ApiExceptionResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
     public Project createProject(Project project) {
         try {
+            project.setCreatedAt(new Date());
             return projectRepository.save(project);
         } catch (Exception e) {
             throw new ApiExceptionResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());

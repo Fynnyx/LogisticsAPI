@@ -30,7 +30,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.setRole(Role.USER);
         userRepository.save(user);
         var jwt = jwtService.generateToken(user);
-        return JwtAuthenticationResponse.builder().token(jwt).build();
+        return JwtAuthenticationResponse.builder().token(jwt).user(user).build();
     }
 
     @Override
@@ -43,6 +43,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new IllegalArgumentException("Invalid credentials");
         }
         var jwt = jwtService.generateToken(user);
-        return JwtAuthenticationResponse.builder().token(jwt).build();
+        return JwtAuthenticationResponse.builder().token(jwt).user(user).build();
     }
 }

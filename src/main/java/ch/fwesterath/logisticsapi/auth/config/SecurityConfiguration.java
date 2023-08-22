@@ -30,6 +30,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
@@ -40,6 +41,8 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 public class SecurityConfiguration {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserAuthService userService;
+
+    Logger logger = Logger.getLogger(SecurityConfiguration.class.getName());
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         System.out.println("Debug: Role name: " + Role.ADMIN.name());
@@ -58,10 +61,12 @@ public class SecurityConfiguration {
                                 "/projects"
                         ).hasAnyAuthority("role.USER", "role.ADMIN")
                         .requestMatchers(
-                                "/project/*",
+                                "/user",
+                                "/projects/byId/**",
+                                "/projects/byKeyName/**",
                                 "/projects/*/transports",
                                 "/projects/*/departments"
-                        ).hasAuthority("role.USER")
+                        ).hasAnyAuthority("role.USER", "role.ADMIN")
                         .requestMatchers(
                                 "/projects",
                                 "/projects/**",
@@ -77,11 +82,13 @@ public class SecurityConfiguration {
                 exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(
                                 (request, response, authException) -> {
-                                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "The could not be authenticated or authorized");
+                                    logger.info("Authentication failed: " + authException.getMessage());
+                                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "The user could not be authenticated or authorized");
                                 }
                         )
                         .accessDeniedHandler(
                                 (request, response, accessDeniedException) -> {
+                                    logger.info("Access denied: " + accessDeniedException.getMessage());
                                     response.sendError(HttpServletResponse.SC_FORBIDDEN, "This user/token is not authorized to access this resource");
                                 }
                         )

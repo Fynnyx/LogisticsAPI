@@ -1,6 +1,7 @@
 package ch.fwesterath.logisticsapi.models.project;
 
 import ch.fwesterath.logisticsapi.error.ApiExceptionResponse;
+import ch.fwesterath.logisticsapi.helper.Role;
 import ch.fwesterath.logisticsapi.models.department.Department;
 import ch.fwesterath.logisticsapi.models.department.DepartmentService;
 import ch.fwesterath.logisticsapi.models.transport.Transport;
@@ -35,7 +36,7 @@ public class ProjectController {
         return projectService.getAllProjects();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/byId/{id}")
     public Project getProjectById(@PathVariable("id") Long id) {
 
         Project project = projectService.getProjectById(id);
@@ -49,8 +50,19 @@ public class ProjectController {
         }
     }
 
+    @GetMapping("/byKeyName/{keyName}")
+    public Project getProjectByKeyname(@PathVariable("keyName") String keyName) {
+        return projectService.getProjectByKeyname(keyName);
+    }
+
     @PostMapping
     public Project createProject(@RequestBody Project project) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (project.getOwner() == null || !(userService.getUserByUsername(authentication.getName()).getRole() == Role.ADMIN)) {
+
+            User user = userService.getUserByUsername(authentication.getName());
+            project.setOwner(user);
+        }
         return projectService.createProject(project);
     }
 

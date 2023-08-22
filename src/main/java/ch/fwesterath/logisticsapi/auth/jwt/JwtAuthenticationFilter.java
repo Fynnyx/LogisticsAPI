@@ -39,6 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         jwt = authHeader.substring(7);
         userEmail = jwtService.extractUserName(jwt);
+        logger.info("Authenticating user: " + userEmail);
         if (StringUtils.isNotEmpty(userEmail)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userService.userDetailsService()
@@ -52,6 +53,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.setContext(context);
 
                 logger.info("Authenticated user: " + userEmail + ", Role: " + userDetails.getAuthorities().toString());
+            } else {
+                logger.info("Invalid token for user: " + userEmail + ", Role: " + userDetails.getAuthorities().toString() + ", token: " + jwt);
             }
         }
         filterChain.doFilter(request, response);

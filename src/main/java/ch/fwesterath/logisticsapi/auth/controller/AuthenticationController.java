@@ -4,6 +4,7 @@ import ch.fwesterath.logisticsapi.auth.authentication.AuthenticationService;
 import ch.fwesterath.logisticsapi.auth.dao.JwtAuthenticationResponse;
 import ch.fwesterath.logisticsapi.auth.dao.SignUpRequest;
 import ch.fwesterath.logisticsapi.auth.dao.SigninRequest;
+import ch.fwesterath.logisticsapi.auth.jwt.JwtServiceImpl;
 import ch.fwesterath.logisticsapi.error.ApiExceptionResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,20 @@ import java.util.logging.Logger;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
+    private final JwtServiceImpl jwtService;
+
     Logger logger = Logger.getLogger(AuthenticationController.class.getName());
+
+//    @PostMapping("/token/validation")
+//    public ResponseEntity<Boolean> validateToken(@RequestBody String token) {
+//        try {
+//            logger.info("Token validation request: " + token);
+//            return ResponseEntity.ok(jwtService.isTokenValid(token));
+//        } catch (Exception e) {
+//            throw new ApiExceptionResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+//        }
+//    }
+
     @PostMapping("/user/signup")
     public ResponseEntity<JwtAuthenticationResponse> signup(@RequestBody SignUpRequest request) {
         try {

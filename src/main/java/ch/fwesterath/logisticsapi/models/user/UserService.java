@@ -4,6 +4,8 @@ import ch.fwesterath.logisticsapi.error.ApiExceptionResponse;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -38,6 +40,21 @@ public class UserService {
 
     public User getUserByUsername(String username) {
         try {
+            Optional<User> optionalUser = userRepository.findByUsername(username);
+            if (optionalUser.isPresent()) {
+                return optionalUser.get();
+            } else {
+                throw new ApiExceptionResponse(HttpStatus.NOT_FOUND, "User not found with username " + username);
+            }
+        } catch (Exception e) {
+            throw new ApiExceptionResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public User getCurrentUser() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
             Optional<User> optionalUser = userRepository.findByUsername(username);
             if (optionalUser.isPresent()) {
                 return optionalUser.get();
