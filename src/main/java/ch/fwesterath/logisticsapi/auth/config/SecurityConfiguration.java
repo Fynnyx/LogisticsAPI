@@ -25,6 +25,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -47,6 +48,15 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         System.out.println("Debug: Role name: " + Role.ADMIN.name());
         http.csrf(AbstractHttpConfigurer::disable)
+                .cors(
+                        cors -> cors.configurationSource(request -> {
+                            var corsConfiguration = new CorsConfiguration();
+                            corsConfiguration.setAllowedOrigins(List.of("*"));
+                            corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+                            corsConfiguration.setAllowedHeaders(List.of("Content-Type", "Authorization"));
+                            return corsConfiguration.applyPermitDefaultValues();
+                        })
+                )
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(
                                 "/auth/user/**",

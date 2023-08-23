@@ -17,15 +17,4 @@ public class LogisticsAPIApplication {
     public static void main(String[] args) {
         SpringApplication.run(LogisticsAPIApplication.class, args);
     }
-
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            @CrossOrigin(origins = "*")
-            public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
-                registry.addMapping("/**").allowedMethods("*");
-            }
-        };
-    }
 }

@@ -13,6 +13,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.logging.Logger;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -20,6 +22,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+
+    Logger logger = Logger.getLogger(AuthenticationServiceImpl.class.getName());
+
     @Override
     public JwtAuthenticationResponse signup(SignUpRequest request) {
         var user = new User();
@@ -43,6 +48,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new IllegalArgumentException("Invalid credentials");
         }
         var jwt = jwtService.generateToken(user);
+//        JwtAuthenticationResponse response = JwtAuthenticationResponse.builder().token(jwt).user(user).build();
+//        System.out.println(response);
+//        return response;
+        logger.info("User " + user.getUsername() + " signed in");
         return JwtAuthenticationResponse.builder().token(jwt).user(user).build();
     }
 }
